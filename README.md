@@ -85,6 +85,15 @@ git merge feature/your-task
 git push origin main
 ```
 
+## Project structure
+
+This repository uses a clear separation between frontend and backend concerns.
+
+- Frontend: Page → Hook → Service → API
+- Backend: Route → Controller → Service → Repository → SQLite
+
+The frontend app lives in `frontend/` and the backend app skeleton lives in `backend/`.
+
 ## Getting started
 
 _To be added by the team once the stack is chosen: install and run steps for the frontend and the backend._

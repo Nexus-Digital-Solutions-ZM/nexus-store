@@ -15,7 +15,9 @@ dist-ssr
 
 # Node
 node_modules
+package-lock.json
 
 # IDE
 .vscode/
 .idea/
+.kilo/

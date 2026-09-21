@@ -4,14 +4,12 @@
   "private": true,
   "description": "Nexus Store - mini online store (frontend + backend).",
   "scripts": {
-    "dev": "npm --workspace frontend run dev & npm --workspace backend run dev",
-    "install:frontend": "cd frontend && npm install",
-    "install:backend": "cd backend && npm install",
-    "install:all": "npm install:frontend && npm install:backend",
-    "build:frontend": "cd frontend && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "start:frontend": "cd frontend && npm run preview",
-    "start:backend": "cd backend && npm run start"
+    "dev:frontend": "npm --workspace frontend run dev",
+    "dev:backend": "npm --workspace backend run dev",
+    "build": "npm --workspace frontend run build && npm --workspace backend run build",
+    "typecheck": "npm --workspace frontend run typecheck && npm --workspace backend run typecheck",
+    "install:frontend": "npm --workspace frontend install",
+    "install:backend": "npm --workspace backend install"
   },
   "workspaces": [
     "frontend",
