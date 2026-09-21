@@ -1,12 +1,13 @@
-export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  inStock: number;
+export type CartItem = {
+  productId: string
+  name: string
+  price: number
+  quantity: number
+  stock: number
+  image?: string
 }
 
-export interface CartState {
-  items: CartItem[];
-  total: number;
+export type Cart = {
+  items: CartItem[]
+  total: number
 }
