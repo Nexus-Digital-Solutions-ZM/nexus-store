@@ -4,16 +4,37 @@ Mini online store built as a team task by Nexus Digital Solutions ZM junior deve
 
 ## Overview
 
-A small store website with a product list, a shopping cart and a checkout. Payments are mocked for now, and the payment layer must be built so a real provider (e.g. Lipila) can be plugged in later.
+A small store with a website, a backend API and stock inventory. Payments are mocked for now, and the payment layer must be built so a real provider (e.g. Lipila) can be plugged in later.
 
 ## Scope
 
+**Frontend**
 - Product list with dummy products
 - Cart: add, remove, change quantity, see total
+- Out-of-stock products clearly marked, and they can't be added to the cart
 - Checkout with two payment options:
   - Mobile Money (mocked)
   - Visa / Card (mocked)
-- Payment logic kept separate from the UI
+
+**Backend**
+- API for products, cart/orders and checkout
+- Every product has a stock count
+- Checkout reduces stock
+- The store must never sell more than what is in stock
+- Every stock change (sale, restock, correction) is recorded, not only the current count
+- Payment logic kept separate from the rest of the code
+
+## Plan first
+
+Before writing code, post your answers to these in the group chat:
+
+1. How will you store products and stock (data shape, and what database or file)?
+2. When does stock go down: when an item is added to the cart, or only after payment succeeds?
+3. What happens if two people try to buy the last item at the same time?
+4. What happens if payment fails after stock has been reserved?
+5. How will you track every stock change (sale, restock, correction), not only the current count?
+
+Also agree who does what, the cart data shape (e.g. `{ id, name, price, qty }`) and the stack, with a short reason for your choices.
 
 ## Team
 
@@ -24,8 +45,8 @@ A small store website with a product list, a shopping cart and a checkout. Payme
 
 ## Working rules
 
-1. Plan first. Agree who does what and the cart data shape (e.g. `{ id, name, price, qty }`) in the group chat before coding.
-2. Work on your own branch (e.g. `feature/cart`, `feature/checkout`). Don't both work on the same branch.
+1. Plan first. Answer the questions above and agree who does what before coding.
+2. Work on your own branch (e.g. `feature/cart`, `feature/stock-api`). Don't both work on the same branch.
 3. Merge into `main` only when your part works, and tell the other person when you do.
 4. Run `git pull origin main` before you start work and before you merge.
 5. Commit in small steps with clear messages.
@@ -55,8 +76,8 @@ git push origin main
 
 ## Getting started
 
-_To be added by the team once the stack is chosen: install and run steps._
+_To be added by the team once the stack is chosen: install and run steps for the frontend and the backend._
 
 ## Deadline
 
-Sunday 27 Sept, 6 PM.
+Tuesday 29 Sept, 6 PM.
