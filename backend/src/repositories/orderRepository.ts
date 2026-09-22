@@ -5,6 +5,8 @@ function mapOrder(row: {
   id: string;
   status: OrderStatus;
   total: number;
+  customer_name: string;
+  customer_phone: string;
   reservation_expires_at: string | null;
   created_at: string;
   updated_at: string;
@@ -13,6 +15,8 @@ function mapOrder(row: {
     id: row.id,
     status: row.status,
     total: row.total,
+    customerName: row.customer_name,
+    customerPhone: row.customer_phone,
     ...(row.reservation_expires_at !== null && {
       reservationExpiresAt: row.reservation_expires_at,
     }),
@@ -26,6 +30,8 @@ export const orderRepository = {
     id: string;
     status: OrderStatus;
     total: number;
+    customerName: string;
+    customerPhone: string;
     reservationExpiresAt?: string;
     createdAt: string;
     updatedAt: string;
@@ -33,13 +39,15 @@ export const orderRepository = {
     return new Promise((resolve, reject) => {
       db.run(
         `
-          INSERT INTO orders (id, status, total, reservation_expires_at, created_at, updated_at)
-          VALUES (?, ?, ?, ?, ?, ?)
+          INSERT INTO orders (id, status, total, customer_name, customer_phone, reservation_expires_at, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           order.id,
           order.status,
           order.total,
+          order.customerName,
+          order.customerPhone,
           order.reservationExpiresAt ?? null,
           order.createdAt,
           order.updatedAt,
@@ -61,7 +69,7 @@ export const orderRepository = {
       db.get(
         `
           SELECT
-            id, status, total, reservation_expires_at, created_at, updated_at
+            id, status, total, customer_name, customer_phone, reservation_expires_at, created_at, updated_at
           FROM orders
           WHERE id = ?
         `,

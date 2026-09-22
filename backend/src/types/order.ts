@@ -8,6 +8,8 @@ export interface OrderRecord {
   id: string;
   status: OrderStatus;
   total: number;
+  customerName: string;
+  customerPhone: string;
   reservationExpiresAt?: string;
   createdAt: string;
   updatedAt: string;

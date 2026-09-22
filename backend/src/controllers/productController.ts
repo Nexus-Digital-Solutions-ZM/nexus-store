@@ -6,7 +6,16 @@ export const productController = {
   getProducts: async (_req: Request, res: Response): Promise<void> => {
     try {
       const products = await productService.listProducts();
-      res.json({ products });
+      res.json({
+        products: products.map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description ?? "",
+          price: p.price,
+          image: p.imageUrl ?? "",
+          stock: p.stock,
+        })),
+      });
     } catch (error) {
       res.status(500).json({ error: "SERVER_ERROR", message: "Internal server error" });
     }
@@ -16,9 +25,16 @@ export const productController = {
     try {
       const product = await productService.getProduct(req.params.id);
       if (!product) {
-        throw new AppError(404, "PRODUCT_NOT_FOUND", `Product ${req.params.id} not found`);
+        throw new AppError(404, "PRODUCT_NOT_FOUND", "Product not found");
       }
-      res.json({ product });
+      res.json({
+        id: product.id,
+        name: product.name,
+        description: product.description ?? "",
+        price: product.price,
+        image: product.imageUrl ?? "",
+        stock: product.stock,
+      });
     } catch (error) {
       if (error instanceof AppError) {
         res.status(error.statusCode).json({ error: error.error, message: error.message });

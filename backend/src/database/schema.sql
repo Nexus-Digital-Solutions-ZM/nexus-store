@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS orders (
     status IN ('pending_payment', 'paid', 'failed', 'expired')
   ),
   total REAL NOT NULL CHECK (total >= 0),
+  customer_name TEXT NOT NULL DEFAULT '',
+  customer_phone TEXT NOT NULL DEFAULT '',
   reservation_expires_at TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL

@@ -6,32 +6,43 @@ import { db } from "../src/database/db.js";
 
 describe("Single-item checkout", () => {
   it("should succeed with sufficient stock", async () => {
-    const result = await checkoutService.checkout(
-      [{ productId: "product-1", quantity: 1 }],
-      "mobile_money",
-    );
-    expect(result.orderId).toBeDefined();
-    expect(result.reservationExpiresAt).toBeDefined();
+    const result = await checkoutService.checkout({
+      items: [{ productId: "product-1", quantity: 1 }],
+      paymentMethod: "mobile_money",
+      customer: { name: "John", phone: "5551234567" },
+    });
+    expect(result.order.id).toBeDefined();
+    expect(result.order.status).toBe("paid");
+    expect(result.payment.status).toBe("success");
+    expect(result.payment.method).toBe("mobile_money");
+    expect(result.payment.transactionId).toBeDefined();
   });
 });
 
 describe("Multi-item checkout", () => {
   it("should succeed with multiple items", async () => {
-    const result = await checkoutService.checkout(
-      [
+    const result = await checkoutService.checkout({
+      items: [
         { productId: "product-1", quantity: 2 },
         { productId: "product-2", quantity: 3 },
       ],
-      "card",
-    );
-    expect(result.orderId).toBeDefined();
+      paymentMethod: "card",
+      customer: { name: "Jane", phone: "5559876543" },
+    });
+    expect(result.order.id).toBeDefined();
+    expect(result.order.total).toBe(350);
+    expect(result.payment.status).toBe("success");
   });
 });
 
 describe("Insufficient stock", () => {
   it("should fail with OUT_OF_STOCK", async () => {
     const error = await checkoutService
-      .checkout([{ productId: "product-1", quantity: 999 }], "mobile_money")
+      .checkout({
+        items: [{ productId: "product-1", quantity: 999 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("OUT_OF_STOCK");
@@ -42,7 +53,11 @@ describe("Insufficient stock", () => {
 describe("Missing product", () => {
   it("should fail with PRODUCT_NOT_FOUND", async () => {
     const error = await checkoutService
-      .checkout([{ productId: "missing", quantity: 1 }], "mobile_money")
+      .checkout({
+        items: [{ productId: "missing", quantity: 1 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("PRODUCT_NOT_FOUND");
@@ -52,7 +67,11 @@ describe("Missing product", () => {
 describe("Invalid quantity", () => {
   it("zero quantity should fail", async () => {
     const error = await checkoutService
-      .checkout([{ productId: "product-1", quantity: 0 }], "mobile_money")
+      .checkout({
+        items: [{ productId: "product-1", quantity: 0 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("INVALID_QUANTITY");
@@ -60,7 +79,11 @@ describe("Invalid quantity", () => {
 
   it("negative quantity should fail", async () => {
     const error = await checkoutService
-      .checkout([{ productId: "product-1", quantity: -1 }], "mobile_money")
+      .checkout({
+        items: [{ productId: "product-1", quantity: -1 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("INVALID_QUANTITY");
@@ -70,13 +93,14 @@ describe("Invalid quantity", () => {
 describe("Atomicity", () => {
   it("should rollback entire checkout when one item is out of stock", async () => {
     const error = await checkoutService
-      .checkout(
-        [
+      .checkout({
+        items: [
           { productId: "product-1", quantity: 1 },
           { productId: "product-3", quantity: 1 },
         ],
-        "mobile_money",
-      )
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("OUT_OF_STOCK");
@@ -89,17 +113,24 @@ describe("Atomicity", () => {
 });
 
 describe("Concurrency", () => {
-  it("only one checkout succeeds when stock is 1 (sequential test)", async () => {
+  it("only one checkout succeeds when stock is 1", async () => {
     await db.run("UPDATE products SET stock = 1 WHERE id = 'product-2'");
 
     const result = await checkoutService.checkout(
-      [{ productId: "product-2", quantity: 1 }],
-      "mobile_money",
+      {
+        items: [{ productId: "product-2", quantity: 1 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      },
     );
-    expect(result.orderId).toBeDefined();
+    expect(result.order.id).toBeDefined();
 
     const error = await checkoutService
-      .checkout([{ productId: "product-2", quantity: 1 }], "mobile_money")
+      .checkout({
+        items: [{ productId: "product-2", quantity: 1 }],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
       .catch((e) => e);
     expect(error).toBeInstanceOf(AppError);
     expect(error.error).toBe("OUT_OF_STOCK");

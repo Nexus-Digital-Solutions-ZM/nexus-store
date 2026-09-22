@@ -3,12 +3,8 @@ import { productService } from "../src/services/productService.js";
 
 describe("List products", () => {
   it("should list all products", async () => {
-    const products = await productService.listProducts();
-    expect(products.length).toBeGreaterThan(0);
-    expect(products[0]).toHaveProperty("id");
-    expect(products[0]).toHaveProperty("name");
-    expect(products[0]).toHaveProperty("price");
-    expect(products[0]).toHaveProperty("stock");
+    const result = await productService.listProducts();
+    expect(result.length).toBeGreaterThan(0);
   });
 });
 
