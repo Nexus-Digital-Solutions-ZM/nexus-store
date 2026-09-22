@@ -1,6 +1,14 @@
+export type OrderStatus =
+  | "pending_payment"
+  | "paid"
+  | "failed"
+  | "expired";
+
 export interface OrderRecord {
   id: string;
-  status: "pending" | "confirmed" | "failed" | "cancelled";
+  status: OrderStatus;
   total: number;
+  reservationExpiresAt?: string;
   createdAt: string;
+  updatedAt: string;
 }

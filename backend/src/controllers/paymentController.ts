@@ -1,7 +1,20 @@
-import type { Request, Response } from "express";
+import type { Request, Response, NextFunction } from "express";
+import { paymentService } from "../services/paymentService.js";
+import { AppError } from "../errors/AppError.js";
 
 export const paymentController = {
-  processPayment: async (_req: Request, res: Response): Promise<void> => {
-    res.json({ message: "Payment controller ready" });
+  confirmPayment: async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { orderId, transactionId, method, amount } = req.body;
+      const payment = await paymentService.confirmPayment({
+        orderId,
+        transactionId,
+        method,
+        amount,
+      });
+      res.json({ payment });
+    } catch (error) {
+      next(error);
+    }
   },
 };

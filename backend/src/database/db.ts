@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
-import { mkdirSync } from "node:fs";
-import { dirname } from "node:path";
+import { mkdirSync, readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 
 import { env } from "../config/env.js";
 
@@ -11,28 +11,56 @@ const sqlite = sqlite3.verbose();
 
 export const db = new sqlite.Database(env.databasePath);
 
-export async function initializeDatabase(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    db.run(
-      `
-        CREATE TABLE IF NOT EXISTS products (
-          id TEXT PRIMARY KEY,
-          name TEXT NOT NULL,
-          price REAL NOT NULL,
-          stock INTEGER NOT NULL,
-          description TEXT,
-          image_url TEXT,
-          created_at TEXT NOT NULL
-        );
-      `,
-      (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
+db.exec("PRAGMA busy_timeout = 10000;");
+db.exec("PRAGMA journal_mode = WAL;");
 
-        resolve();
-      },
-    );
+export type DatabaseConnection = sqlite3.Database;
+
+export async function initializeDatabase(): Promise<void> {
+  const schemaPath = resolve(__dirname, "schema.sql");
+  const schema = readFileSync(schemaPath, "utf8");
+
+  return new Promise((resolveDatabase, reject) => {
+    db.exec(schema, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolveDatabase();
+    });
+  });
+}
+
+export async function runTransaction<T>(
+  callback: (connection: DatabaseConnection) => Promise<T>,
+): Promise<T> {
+  await runSql("BEGIN IMMEDIATE");
+
+  try {
+    const result = await callback(db);
+    await runSql("COMMIT");
+    return result;
+  } catch (error) {
+    try {
+      await runSql("ROLLBACK");
+    } catch {
+      // Preserve the original transaction error.
+    }
+
+    throw error;
+  }
+}
+
+function runSql(sql: string): Promise<void> {
+  return new Promise((resolveSql, reject) => {
+    db.run(sql, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolveSql();
+    });
   });
 }

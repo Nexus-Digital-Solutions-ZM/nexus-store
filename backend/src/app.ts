@@ -21,6 +21,5 @@ app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/inventory", inventoryRoutes);
-
 app.use(notFound);
 app.use(errorHandler);

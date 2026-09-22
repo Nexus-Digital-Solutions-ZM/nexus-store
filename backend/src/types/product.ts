@@ -6,4 +6,5 @@ export interface ProductRecord {
   description?: string;
   imageUrl?: string;
   createdAt: string;
+  updatedAt: string;
 }
