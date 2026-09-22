@@ -36,6 +36,17 @@ Before writing code, post your answers to these in the group chat:
 
 Also agree who does what, the cart data shape (e.g. `{ id, name, price, qty }`) and the stack, with a short reason for your choices.
 
+## Stock and checkout rules
+
+- Stock is reserved for 10 minutes when checkout starts.
+- The backend checks for expired reservations and releases the stock before processing new requests.
+- If payment succeeds, the reservation becomes a completed sale and stock is reduced.
+- If payment fails or expires, the stock is released.
+- Each payment has a unique ID. Duplicate confirmations are ignored so stock is not reduced twice.
+- Restocks and corrections are recorded as stock movements with the quantity, reason, previous stock, new stock, and date.
+- Restock and correction actions are admin-only and protected by a token stored in an environment variable.
+- The `.env` file must never be committed.
+
 ## Team
 
 | Name | GitHub | Responsibility |
@@ -73,6 +84,15 @@ git pull origin main
 git merge feature/your-task
 git push origin main
 ```
+
+## Project structure
+
+This repository uses a clear separation between frontend and backend concerns.
+
+- Frontend: Page → Hook → Service → API
+- Backend: Route → Controller → Service → Repository → SQLite
+
+The frontend app lives in `frontend/` and the backend app skeleton lives in `backend/`.
 
 ## Getting started
 

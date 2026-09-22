@@ -1,0 +1,23 @@
+# Build output
+dist
+dist-ssr
+
+# Local env
+.env
+.env.*
+!.env.example
+
+# Vite
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Node
+node_modules
+package-lock.json
+
+# IDE
+.vscode/
+.idea/
+.kilo/
