@@ -17,7 +17,7 @@ db.exec("PRAGMA journal_mode = WAL;");
 export type DatabaseConnection = sqlite3.Database;
 
 export async function initializeDatabase(): Promise<void> {
-  const schemaPath = resolve(__dirname, "schema.sql");
+  const schemaPath = resolve(import.meta.dirname, "schema.sql");
   const schema = readFileSync(schemaPath, "utf8");
 
   return new Promise((resolveDatabase, reject) => {
