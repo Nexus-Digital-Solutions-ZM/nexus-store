@@ -1,6 +1,8 @@
 import { useProducts } from './hooks/useProducts'
+import OrderSuccessPage from './pages/OrderSuccessPage'
 import CartItem from './components/cart/CartItem'
 import CartSummary from './components/cart/CartSummary'
+import CheckoutPage from './pages/CheckoutPage'
 import CartEmpty from './components/cart/CartEmpty'
 import ProductList from './components/products/ProductList'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
@@ -103,14 +105,6 @@ function CartPage() {
   )
 }
 
-function CheckoutPage() {
-  return (
-    <main className="page-container">
-      <h1>Checkout</h1>
-      <p>Checkout form coming next.</p>
-    </main>
-  )
-}
 
 function App() {
   const { itemCount } = useCart()
@@ -138,6 +132,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/order-success" element={<OrderSuccessPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
