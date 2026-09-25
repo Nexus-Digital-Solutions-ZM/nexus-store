@@ -1,45 +1,29 @@
-import { createContext, useEffect, useMemo, useState } from 'react'
-import type { ReactNode } from 'react'
-import type { CartItem } from '../types/cart'
-import type { Product } from '../types/product'
+import {
+  createContext,
+  useContext,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
+import type { CartItem, Product } from '../types/product'
 
-type CartContextType = {
+type CartContextValue = {
   items: CartItem[]
-  total: number
   itemCount: number
+  total: number
   addToCart: (product: Product) => void
   removeFromCart: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
   clearCart: () => void
 }
 
-export const CartContext = createContext<CartContextType | undefined>(undefined)
-
-const CART_STORAGE_KEY = 'nexus-store-cart'
+const CartContext = createContext<CartContextValue | undefined>(undefined)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>(() => {
-    const savedCart = localStorage.getItem(CART_STORAGE_KEY)
+  const [items, setItems] = useState<CartItem[]>([])
 
-    if (!savedCart) {
-      return []
-    }
-
-    try {
-      return JSON.parse(savedCart)
-    } catch {
-      return []
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
-  }, [items])
-
-  const addToCart = (product: Product) => {
-    if (product.stock <= 0) {
-      return
-    }
+  function addToCart(product: Product) {
+    if (product.stock <= 0) return
 
     setItems((currentItems) => {
       const existingItem = currentItems.find(
@@ -53,7 +37,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         return currentItems.map((item) =>
           item.productId === product.id
-            ? { ...item, quantity: item.quantity + 1, stock: product.stock }
+            ? { ...item, quantity: item.quantity + 1 }
             : item,
         )
       }
@@ -72,56 +56,58 @@ export function CartProvider({ children }: { children: ReactNode }) {
     })
   }
 
-  const removeFromCart = (productId: string) => {
+  function removeFromCart(productId: string) {
     setItems((currentItems) =>
       currentItems.filter((item) => item.productId !== productId),
     )
   }
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  function updateQuantity(productId: string, quantity: number) {
     setItems((currentItems) =>
-      currentItems.map((item) => {
-        if (item.productId !== productId) {
-          return item
-        }
-
-        const safeQuantity = Math.max(1, Math.min(quantity, item.stock))
-
-        return {
-          ...item,
-          quantity: safeQuantity,
-        }
-      }),
+      currentItems.map((item) =>
+        item.productId === productId
+          ? {
+              ...item,
+              quantity: Math.max(1, Math.min(quantity, item.stock)),
+            }
+          : item,
+      ),
     )
   }
 
-  const clearCart = () => {
+  function clearCart() {
     setItems([])
   }
+
+  const itemCount = useMemo(
+    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    [items],
+  )
 
   const total = useMemo(
     () => items.reduce((sum, item) => sum + item.price * item.quantity, 0),
     [items],
   )
 
-  const itemCount = useMemo(
-    () => items.reduce((count, item) => count + item.quantity, 0),
-    [items],
-  )
+  const value = {
+    items,
+    itemCount,
+    total,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+  }
 
-  return (
-    <CartContext.Provider
-      value={{
-        items,
-        total,
-        itemCount,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-      }}
-    >
-      {children}
-    </CartContext.Provider>
-  )
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>
+}
+
+export function useCart() {
+  const context = useContext(CartContext)
+
+  if (!context) {
+    throw new Error('useCart must be used inside CartProvider')
+  }
+
+  return context
 }
