@@ -1,26 +1,42 @@
 import type { Product } from '../../types/product'
-import ProductCard from './ProductCard'
+import { useCart } from '../../context/CartContext'
 
 type ProductListProps = {
   products: Product[]
 }
 
 export default function ProductList({ products }: ProductListProps) {
-  if (products.length === 0) {
-    return (
-      <div className="empty-products">
-        <span>🛍️</span>
-        <h2>No products available</h2>
-        <p>Check back soon for new products.</p>
-      </div>
-    )
-  }
+  const { addToCart } = useCart()
 
   return (
-    <div className="product-grid">
-      {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
-    </div>
+    <section className="product-grid">
+      {products.map((product) => {
+        const outOfStock = product.stock <= 0
+
+        return (
+          <article key={product.id} className="product-card">
+            <div>
+              <h3>{product.name}</h3>
+              <p>{product.description}</p>
+              <strong>K{product.price}</strong>
+
+              <p>
+                {outOfStock
+                  ? 'Out of stock'
+                  : `${product.stock} in stock`}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={outOfStock}
+              onClick={() => addToCart(product)}
+            >
+              {outOfStock ? 'Out of Stock' : 'Add to Cart'}
+            </button>
+          </article>
+        )
+      })}
+    </section>
   )
 }

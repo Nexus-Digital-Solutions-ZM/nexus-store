@@ -6,7 +6,7 @@ import CheckoutPage from './pages/CheckoutPage'
 import CartEmpty from './components/cart/CartEmpty'
 import ProductList from './components/products/ProductList'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import { useCart } from './context/useCart'
+import {useCart } from './context/CartContext'
 import './App.css'
 
 function HomePage() {
@@ -73,7 +73,7 @@ function ProductsPage() {
 }
 
 function CartPage() {
-  const { items } = useCart()
+  const { items,total} = useCart()
 
   if (items.length === 0) {
     return (
@@ -99,12 +99,11 @@ function CartPage() {
           ))}
         </section>
 
-        <CartSummary />
+        <CartSummary total={total} />
       </div>
     </main>
   )
 }
-
 
 function App() {
   const { itemCount } = useCart()
@@ -120,13 +119,13 @@ function App() {
           <Link to="/">Home</Link>
           <Link to="/products">Products</Link>
           <Link to="/cart" className="cart-link">
-  🛒
-  <span>Cart</span>
+            🛒
+            <span>Cart</span>
 
-  {itemCount > 0 && (
-    <span className="cart-count">{itemCount}</span>
-  )}
-</Link>
+            {itemCount > 0 && (
+              <span className="cart-count">{itemCount}</span>
+            )}
+          </Link>
         </nav>
       </header>
 
