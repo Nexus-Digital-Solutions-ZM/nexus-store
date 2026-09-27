@@ -17,7 +17,10 @@ function run(sql: string, params?: unknown[]): Promise<void> {
   });
 }
 
-function get<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T | null> {
+function get<T = Record<string, unknown>>(
+  sql: string,
+  params?: unknown[],
+): Promise<T | null> {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (error, row) => {
       if (error) reject(error);
@@ -35,6 +38,7 @@ async function checkExpiry(orderId: string): Promise<void> {
   if (!order || order.status !== "pending_payment") return;
 
   if (!order.reservationExpiresAt) return;
+
   if (Date.now() >= new Date(order.reservationExpiresAt).getTime()) {
     const reservation = await reservationRepository.findByOrderId(orderId);
     const reservationItems = reservation
@@ -45,19 +49,33 @@ async function checkExpiry(orderId: string): Promise<void> {
     try {
       await run("BEGIN TRANSACTION");
 
-      await run(`UPDATE orders SET status = 'expired', updated_at = ? WHERE id = ?`, [nowStr, orderId]);
+      await run(
+        `UPDATE orders SET status = 'expired', updated_at = ? WHERE id = ?`,
+        [nowStr, orderId],
+      );
+
       if (reservation) {
-        await run(`UPDATE reservations SET status = 'released', released_at = ? WHERE id = ?`, [nowStr, reservation.id]);
+        await run(
+          `UPDATE reservations SET status = 'released', released_at = ? WHERE id = ?`,
+          [nowStr, reservation.id],
+        );
       }
 
       for (const item of reservationItems) {
-        await run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [item.quantity, item.productId]);
-
         const productRow = await get<{ stock: number }>(
           `SELECT stock FROM products WHERE id = ?`,
           [item.productId],
         );
+
         if (productRow) {
+          const previousStock = productRow.stock;
+          const newStock = previousStock + item.quantity;
+
+          await run(`UPDATE products SET stock = stock + ? WHERE id = ?`, [
+            item.quantity,
+            item.productId,
+          ]);
+
           await run(
             `INSERT INTO stock_movements (id, product_id, quantity, type, previous_stock, new_stock, order_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
             [
@@ -65,8 +83,8 @@ async function checkExpiry(orderId: string): Promise<void> {
               item.productId,
               item.quantity,
               "correction",
-              productRow.stock - item.quantity,
-              productRow.stock,
+              previousStock,
+              newStock,
               orderId,
               nowStr,
             ],
