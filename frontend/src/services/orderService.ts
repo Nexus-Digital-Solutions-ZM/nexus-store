@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-export const orderService = {
-  async createOrder(): Promise<unknown> {
-    return {};
-  },
-};
-=======
 import type { Order } from '../types/order'
 import type { Payment } from '../types/payment'
 
@@ -45,4 +38,3 @@ export async function checkoutOrder(
 
   return data as CheckoutResponse
 }
->>>>>>> 0396dbe (feat: complete Nexus Store frontend and backend)

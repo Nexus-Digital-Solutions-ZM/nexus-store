@@ -1,8 +1,3 @@
-<<<<<<< HEAD
-export default function OrderFailedPage(): JSX.Element {
-  return <section><h2>Order Failed</h2></section>;
-}
-=======
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 
@@ -21,7 +16,7 @@ export default function OrderFailedPage() {
   return (
     <main className="page-container">
       <div className="order-result failed">
-        <div className="order-result-icon">✕</div>
+        <div className="order-result-icon">?</div>
 
         <p className="eyebrow">ORDER FAILED</p>
 
@@ -54,4 +49,3 @@ export default function OrderFailedPage() {
     </main>
   )
 }
->>>>>>> 0396dbe (feat: complete Nexus Store frontend and backend)
