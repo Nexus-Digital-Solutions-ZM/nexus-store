@@ -1,6 +1,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -17,10 +18,43 @@ type CartContextValue = {
   clearCart: () => void
 }
 
+const CART_STORAGE_KEY = 'nexus-store-cart'
+
 const CartContext = createContext<CartContextValue | undefined>(undefined)
+
+function loadCartFromStorage(): CartItem[] {
+  try {
+    const stored = localStorage.getItem(CART_STORAGE_KEY)
+    if (stored) {
+      return JSON.parse(stored) as CartItem[]
+    }
+  } catch {
+    // Ignore parse errors
+  }
+  return []
+}
+
+function saveCartToStorage(items: CartItem[]) {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items))
+  } catch {
+    // Ignore storage errors
+  }
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
+
+  useEffect(() => {
+    const storedItems = loadCartFromStorage()
+    if (storedItems.length > 0) {
+      setItems(storedItems)
+    }
+  }, [])
+
+  useEffect(() => {
+    saveCartToStorage(items)
+  }, [items])
 
   function addToCart(product: Product) {
     if (product.stock <= 0) return
@@ -80,7 +114,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }
 
   const itemCount = useMemo(
-    () => items.reduce((sum, item) => sum + item.quantity, 0),
+    () => items.length,
     [items],
   )
 

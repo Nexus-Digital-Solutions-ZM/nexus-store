@@ -1,4 +1,4 @@
-import type { CartItem } from './cart'
+import type { CartItem } from './product'
 
 export type OrderStatus = 'pending' | 'paid' | 'failed'
 

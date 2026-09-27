@@ -1,12 +1,13 @@
 import { useProducts } from './hooks/useProducts'
 import OrderSuccessPage from './pages/OrderSuccessPage'
+import OrderFailedPage from './pages/OrderFailedPage'
 import CartItem from './components/cart/CartItem'
 import CartSummary from './components/cart/CartSummary'
 import CheckoutPage from './pages/CheckoutPage'
 import CartEmpty from './components/cart/CartEmpty'
-import ProductList from './components/products/ProductList'
+import ProductCard from './components/products/ProductCard'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import {useCart } from './context/CartContext'
+import { useCart } from './context/CartContext'
 import './App.css'
 
 function HomePage() {
@@ -67,13 +68,26 @@ function ProductsPage() {
         </div>
       )}
 
-      {!loading && !error && <ProductList products={products} />}
+      {!loading && !error && products.length === 0 && (
+        <div className="products-message empty-products">
+          <p>No products available at the moment.</p>
+          <small>Check back later for new arrivals.</small>
+        </div>
+      )}
+
+      {!loading && !error && products.length > 0 && (
+        <section className="product-grid">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </section>
+      )}
     </main>
   )
 }
 
 function CartPage() {
-  const { items,total} = useCart()
+  const { items, total } = useCart()
 
   if (items.length === 0) {
     return (
@@ -132,6 +146,7 @@ function App() {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/order-success" element={<OrderSuccessPage />} />
+        <Route path="/order-failed" element={<OrderFailedPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

@@ -1,4 +1,4 @@
-import type { CartItem } from '../../types/cart'
+import type { CartItem } from '../../types/product'
 
 type OrderSummaryProps = {
   items: CartItem[]

@@ -6,4 +6,5 @@ export type Payment = {
   status: PaymentStatus
   method: PaymentMethod
   transactionId?: string
+  mobileMoneyNetwork?: 'mtn' | 'airtel' | 'zamtel'
 }
