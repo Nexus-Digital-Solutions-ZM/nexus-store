@@ -23,6 +23,15 @@ function run(sql: string, params?: unknown[]): Promise<void> {
   });
 }
 
+function runStatement(sql: string, params?: unknown[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (error) {
+      if (error) reject(error);
+      else resolve(this.changes);
+    });
+  });
+}
+
 function get<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T | null> {
   return new Promise((resolve, reject) => {
     db.get(sql, params, (error, row) => {
@@ -78,7 +87,15 @@ export const paymentService = {
       const reservationItems = await reservationItemRepository.findByReservationId(reservation.id);
 
       if (result.success) {
-        await run(`UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ?`, [now, orderId]);
+        const changes = await runStatement(
+          `UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ? AND status = 'pending_payment'`,
+          [now, orderId],
+        );
+
+        if (changes === 0) {
+          throw new AppError(400, "ORDER_NOT_PENDING", `Order ${orderId} is not pending payment`);
+        }
+
         await run(`UPDATE reservations SET status = 'finalized' WHERE id = ?`, [reservation.id]);
 
         for (const item of reservationItems) {
@@ -100,7 +117,15 @@ export const paymentService = {
           }
         }
       } else {
-        await run(`UPDATE orders SET status = 'failed', updated_at = ? WHERE id = ?`, [now, orderId]);
+        const changes = await runStatement(
+          `UPDATE orders SET status = 'failed', updated_at = ? WHERE id = ? AND status = 'pending_payment'`,
+          [now, orderId],
+        );
+
+        if (changes === 0) {
+          throw new AppError(400, "ORDER_NOT_PENDING", `Order ${orderId} is not pending payment`);
+        }
+
         await run(`UPDATE reservations SET status = 'released', released_at = ? WHERE id = ?`, [now, reservation.id]);
 
         for (const item of reservationItems) {

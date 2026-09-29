@@ -17,6 +17,15 @@ function run(sql: string, params?: unknown[]): Promise<void> {
   });
 }
 
+function runStatement(sql: string, params?: unknown[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (error) {
+      if (error) reject(error);
+      else resolve(this.changes);
+    });
+  });
+}
+
 function get<T = Record<string, unknown>>(
   sql: string,
   params?: unknown[],
@@ -49,10 +58,15 @@ async function checkExpiry(orderId: string): Promise<void> {
     try {
       await run("BEGIN TRANSACTION");
 
-      await run(
-        `UPDATE orders SET status = 'expired', updated_at = ? WHERE id = ?`,
+      const changes = await runStatement(
+        `UPDATE orders SET status = 'expired', updated_at = ? WHERE id = ? AND status = 'pending_payment'`,
         [nowStr, orderId],
       );
+
+      if (changes === 0) {
+        await run("ROLLBACK");
+        return;
+      }
 
       if (reservation) {
         await run(

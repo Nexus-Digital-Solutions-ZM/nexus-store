@@ -56,6 +56,27 @@ export const productRepository = {
     });
   },
 
+  async updateStock(id: string, stock: number, updatedAt: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+      db.run(
+        `
+          UPDATE products
+          SET stock = ?, updated_at = ?
+          WHERE id = ?
+        `,
+        [stock, updatedAt, id],
+        function (error) {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          resolve(this.changes);
+        },
+      );
+    });
+  },
+
   async findById(id: string): Promise<ProductRecord | null> {
     return new Promise((resolve, reject) => {
       db.get(

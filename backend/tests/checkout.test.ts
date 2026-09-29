@@ -146,3 +146,48 @@ describe("Historical pricing", () => {
     expect(product!.price).toBe(100);
   });
 });
+
+describe("Duplicate product validation", () => {
+  it("should reject checkout with duplicate product IDs", async () => {
+    const error = await checkoutService
+      .checkout({
+        items: [
+          { productId: "product-1", quantity: 1 },
+          { productId: "product-1", quantity: 1 },
+        ],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
+      .catch((e) => e);
+    expect(error).toBeInstanceOf(AppError);
+    expect(error.error).toBe("DUPLICATE_PRODUCT");
+    expect(error.statusCode).toBe(400);
+    expect(error.message).toContain("product-1");
+  });
+
+  it("should not create any order or reservation when duplicate products rejected", async () => {
+    await checkoutService
+      .checkout({
+        items: [
+          { productId: "product-1", quantity: 1 },
+          { productId: "product-1", quantity: 1 },
+        ],
+        paymentMethod: "mobile_money",
+        customer: { name: "Test", phone: "5555555555" },
+      })
+      .catch((e) => e);
+
+    const orders = await new Promise<any[]>((resolve, reject) => {
+      db.all("SELECT * FROM orders", (err, rows) => err ? reject(err) : resolve(rows));
+    });
+    expect(orders.length).toBe(0);
+
+    const reservations = await new Promise<any[]>((resolve, reject) => {
+      db.all("SELECT * FROM reservations", (err, rows) => err ? reject(err) : resolve(rows));
+    });
+    expect(reservations.length).toBe(0);
+
+    const p1 = await productService.getProduct("product-1");
+    expect(p1!.stock).toBe(10);
+  });
+});

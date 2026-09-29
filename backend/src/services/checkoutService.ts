@@ -1,6 +1,7 @@
 import { db } from "../database/db.js";
 import { productRepository } from "../repositories/productRepository.js";
 import { orderRepository } from "../repositories/orderRepository.js";
+import { orderItemRepository } from "../repositories/orderItemRepository.js";
 import { reservationRepository } from "../repositories/reservationRepository.js";
 import { reservationItemRepository } from "../repositories/reservationItemRepository.js";
 import { paymentRepository } from "../repositories/paymentRepository.js";
@@ -19,6 +20,15 @@ function run(sql: string, params?: unknown[]): Promise<void> {
     db.run(sql, params, (error) => {
       if (error) reject(error);
       else resolve();
+    });
+  });
+}
+
+function runStatement(sql: string, params?: unknown[]): Promise<number> {
+  return new Promise((resolve, reject) => {
+    db.run(sql, params, function (error) {
+      if (error) reject(error);
+      else resolve(this.changes);
     });
   });
 }
@@ -57,6 +67,18 @@ export const checkoutService = {
       }
     }
 
+    const seenProductIds = new Set<string>();
+    for (const item of items) {
+      if (seenProductIds.has(item.productId)) {
+        throw new AppError(
+          400,
+          "DUPLICATE_PRODUCT",
+          `Duplicate product in checkout: ${item.productId}`,
+        );
+      }
+      seenProductIds.add(item.productId);
+    }
+
     const products = await Promise.all(items.map((item) => productRepository.findById(item.productId)));
 
     for (let i = 0; i < products.length; i++) {
@@ -91,48 +113,37 @@ export const checkoutService = {
         [reservationId, orderId, "active", expiresAt, now],
       );
 
-      const orderItemStmt = db.prepare(
-        `INSERT INTO order_items (id, order_id, product_id, product_name, unit_price, quantity, subtotal) VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      );
-      for (const item of items) {
-        const product = products.find((p) => p!.id === item.productId)!;
-        orderItemStmt.run(
-          generateId("oi"),
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index]!;
+        const product = products[index]!;
+
+        await orderItemRepository.create({
+          id: generateId("oi"),
           orderId,
-          item.productId,
-          product.name,
-          product.price,
-          item.quantity,
-          product.price * item.quantity,
-        );
-      }
-      orderItemStmt.finalize();
+          productId: item.productId,
+          productName: product.name,
+          unitPrice: product.price,
+          quantity: item.quantity,
+          subtotal: product.price * item.quantity,
+        });
 
-      const reservationItemStmt = db.prepare(
-        `INSERT INTO reservation_items (id, reservation_id, product_id, quantity) VALUES (?, ?, ?, ?)`,
-      );
-      for (const item of items) {
-        reservationItemStmt.run(
-          generateId("ri"),
+        await reservationItemRepository.create({
+          id: generateId("ri"),
           reservationId,
-          item.productId,
-          item.quantity,
-        );
+          productId: item.productId,
+          quantity: item.quantity,
+        });
       }
-      reservationItemStmt.finalize();
 
-      const updateStmt = db.prepare(
-        `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?`,
-      );
       for (const item of items) {
-        const result = updateStmt.run(item.quantity, item.productId, item.quantity);
-        if ((result as unknown as { changes: number }).changes === 0) {
-          updateStmt.finalize();
-          await run("ROLLBACK");
+        const changes = await runStatement(
+          `UPDATE products SET stock = stock - ? WHERE id = ? AND stock >= ?`,
+          [item.quantity, item.productId, item.quantity],
+        );
+        if (changes === 0) {
           throw new AppError(409, "OUT_OF_STOCK", "Insufficient stock for one or more items");
         }
       }
-      updateStmt.finalize();
 
       await run("COMMIT");
     } catch (error: unknown) {
