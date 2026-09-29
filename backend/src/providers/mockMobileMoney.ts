@@ -14,11 +14,3 @@ export const mockMobileMoney: PaymentProvider = {
     return { success: !failNext };
   },
 };
-
-export const mockCard: PaymentProvider = {
-  async process(amount: number, _method: PaymentMethod): Promise<{ success: boolean }> {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    return { success: !failNext };
-  },
-};

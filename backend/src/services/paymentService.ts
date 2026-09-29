@@ -11,7 +11,8 @@ import type { ReservationItemRecord } from "../types/reservation.js";
 import { AppError } from "../errors/AppError.js";
 import { generateId } from "../utils/generateId.js";
 import { formatDateForStorage } from "../utils/date.js";
-import { mockMobileMoney, mockCard } from "../providers/mockMobileMoney.js";
+import { mockMobileMoney } from "../providers/mockMobileMoney.js";
+import { mockCard } from "../providers/mockCard.js";
 
 function run(sql: string, params?: unknown[]): Promise<void> {
   return new Promise((resolve, reject) => {

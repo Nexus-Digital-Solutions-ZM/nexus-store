@@ -1,8 +1,158 @@
-export default function App(): JSX.Element {
+import { useProducts } from './hooks/useProducts'
+import OrderSuccessPage from './pages/OrderSuccessPage'
+import OrderFailedPage from './pages/OrderFailedPage'
+import CartItem from './components/cart/CartItem'
+import CartSummary from './components/cart/CartSummary'
+import CheckoutPage from './pages/CheckoutPage'
+import CartEmpty from './components/cart/CartEmpty'
+import ProductCard from './components/products/ProductCard'
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { useCart } from './context/CartContext'
+import './App.css'
+
+function HomePage() {
+  const { itemCount } = useCart()
+
   return (
-    <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
-      <h1>Nexus Store</h1>
-      <p>Frontend skeleton is ready.</p>
+    <main>
+      <section className="hero-section">
+        <div>
+          <p className="eyebrow">NEXUS STORE</p>
+          <h1>Everything you need, in one place.</h1>
+          <p className="hero-text">
+            Browse quality products, add them to your cart, and checkout with
+            Mobile Money or Card.
+          </p>
+
+          <Link to="/products" className="primary-button">
+            Shop Now
+          </Link>
+        </div>
+
+        <div className="hero-card">
+          <span>🛒</span>
+          <strong>{itemCount}</strong>
+          <p>items in your cart</p>
+        </div>
+      </section>
     </main>
-  );
+  )
 }
+
+function ProductsPage() {
+  const { products, loading, error } = useProducts()
+
+  return (
+    <main className="page-container">
+      <div className="products-header">
+        <div>
+          <p className="eyebrow">OUR COLLECTION</p>
+          <h1>Products</h1>
+          <p>Find something you'll love.</p>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="products-message">
+          <p>Loading products...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="products-message error-message">
+          <p>{error}</p>
+          <small>
+            The backend may not be running yet. We'll add development data
+            shortly.
+          </small>
+        </div>
+      )}
+
+      {!loading && !error && products.length === 0 && (
+        <div className="products-message empty-products">
+          <p>No products available at the moment.</p>
+          <small>Check back later for new arrivals.</small>
+        </div>
+      )}
+
+      {!loading && !error && products.length > 0 && (
+        <section className="product-grid">
+          {products.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </section>
+      )}
+    </main>
+  )
+}
+
+function CartPage() {
+  const { items, total } = useCart()
+
+  if (items.length === 0) {
+    return (
+      <main className="page-container">
+        <CartEmpty />
+      </main>
+    )
+  }
+
+  return (
+    <main className="page-container">
+      <div className="cart-header">
+        <div>
+          <p className="eyebrow">YOUR SHOPPING CART</p>
+          <h1>Your Cart</h1>
+        </div>
+      </div>
+
+      <div className="cart-layout">
+        <section className="cart-items">
+          {items.map((item) => (
+            <CartItem key={item.productId} item={item} />
+          ))}
+        </section>
+
+        <CartSummary total={total} />
+      </div>
+    </main>
+  )
+}
+
+function App() {
+  const { itemCount } = useCart()
+
+  return (
+    <BrowserRouter>
+      <header className="navbar">
+        <Link to="/" className="logo">
+          Nexus Store
+        </Link>
+
+        <nav>
+          <Link to="/">Home</Link>
+          <Link to="/products">Products</Link>
+          <Link to="/cart" className="cart-link">
+            🛒
+            <span>Cart</span>
+
+            {itemCount > 0 && (
+              <span className="cart-count">{itemCount}</span>
+            )}
+          </Link>
+        </nav>
+      </header>
+
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/order-success" element={<OrderSuccessPage />} />
+        <Route path="/order-failed" element={<OrderFailedPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+export default App

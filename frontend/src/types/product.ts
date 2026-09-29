@@ -1,22 +1,22 @@
 export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  description?: string;
-  imageUrl?: string;
-  createdAt?: string;
+  id: string
+  name: string
+  description: string
+  price: number
+  image?: string
+  stock: number
 }
 
 export interface CartItem {
-  id: string;
-  name: string;
-  price: number;
-  quantity: number;
-  inStock: number;
+  productId: string
+  name: string
+  price: number
+  quantity: number
+  stock: number
+  image?: string
 }
 
 export interface Cart {
-  items: CartItem[];
-  total: number;
+  items: CartItem[]
+  total: number
 }

@@ -1,14 +1,11 @@
-export interface OrderItem {
-  productId: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
+import type { CartItem } from './product'
 
-export interface Order {
-  id: string;
-  items: OrderItem[];
-  total: number;
-  status: "pending" | "confirmed" | "failed" | "cancelled";
-  createdAt: string;
+export type OrderStatus = 'pending' | 'paid' | 'failed'
+
+export type Order = {
+  id: string
+  status: OrderStatus
+  items: CartItem[]
+  total: number
+  createdAt?: string
 }
